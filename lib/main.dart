@@ -1,7 +1,10 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:manhole_manager/login.dart';
 import 'package:manhole_manager/Home.dart';
-void main() {
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(const FibreOpticsApp());
 }
 
@@ -18,7 +21,7 @@ class FibreOpticsApp extends StatelessWidget {
        backgroundColor: Colors.white,
           bottomAppBarColor: Colors.blueAccent,
         ),
-        home: const LoginScreen(),
+        home: LoginScreen(),
         routes: {
           'login': (context) => LoginScreen(),
           'home':(context) => AdminHomeScreen(),

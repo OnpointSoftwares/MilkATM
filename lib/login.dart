@@ -1,7 +1,62 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
+   LoginScreen({Key? key}) : super(key: key);
+
+  // Controllers for capturing email and password input
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  // Firebase Authentication
+  Future<void> _loginWithEmail(BuildContext context) async {
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(
+          email: emailController.text, password: passwordController.text);
+      Navigator.pushNamed(context, 'home'); // Navigate to Home Screen
+    } catch (e) {
+      _showErrorDialog(context, e.toString());
+    }
+  }
+
+  // Google Sign-In
+  Future<void> _loginWithGoogle(BuildContext context) async {
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) return; // User canceled the login
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      await FirebaseAuth.instance.signInWithCredential(credential);
+      Navigator.pushNamed(context, 'home'); // Navigate to Home Screen
+    } catch (e) {
+      _showErrorDialog(context, e.toString());
+    }
+  }
+
+  void _showErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Login Failed"),
+          content: Text(message),
+          actions: [
+            TextButton(
+              child: const Text("OK"),
+              onPressed: () => Navigator.of(context).pop(),
+            )
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +87,7 @@ class LoginScreen extends StatelessWidget {
               children: [
                 const SizedBox(height: 80),
                 const Icon(
-                  Icons.local_drink,  // Milk ATM related icon
+                  Icons.local_drink, // Milk ATM related icon
                   size: 80,
                   color: Colors.white,
                 ),
@@ -46,12 +101,14 @@ class LoginScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 40),
-                const CustomTextField(
+                CustomTextField(
+                  controller: emailController,
                   hintText: "Enter Email",
                   icon: Icons.email_outlined,
                 ),
                 const SizedBox(height: 20),
-                const CustomTextField(
+                CustomTextField(
+                  controller: passwordController,
                   hintText: "Enter Password",
                   icon: Icons.lock_outlined,
                   isPassword: true,
@@ -62,7 +119,7 @@ class LoginScreen extends StatelessWidget {
                   children: [
                     ElevatedButton(
                       onPressed: () {
-                        Navigator.pushNamed(context, 'home');
+                        _loginWithEmail(context); // Email/Password login
                       },
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
@@ -95,14 +152,29 @@ class LoginScreen extends StatelessWidget {
                   style: TextStyle(color: Colors.white70),
                 ),
                 const SizedBox(height: 20),
-                const Row(
+                Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    SocialIconButton(icon: Icons.facebook),
-                    SizedBox(width: 20),
-                    SocialIconButton(icon: Icons.g_mobiledata),
-                    SizedBox(width: 20),
-                    SocialIconButton(icon: Icons.apple),
+                    SocialIconButton(
+                      icon: Icons.facebook,
+                      onPressed: () {
+                        // Add Facebook login logic if needed
+                      },
+                    ),
+                    const SizedBox(width: 20),
+                    SocialIconButton(
+                      icon: Icons.g_mobiledata,
+                      onPressed: () {
+                        _loginWithGoogle(context); // Google Sign-In
+                      },
+                    ),
+                    const SizedBox(width: 20),
+                    SocialIconButton(
+                      icon: Icons.apple,
+                      onPressed: () {
+                        // Add Apple login logic if needed
+                      },
+                    ),
                   ],
                 ),
               ],
@@ -119,17 +191,20 @@ class CustomTextField extends StatelessWidget {
   final String hintText;
   final IconData icon;
   final bool isPassword;
+  final TextEditingController controller;
 
   const CustomTextField({
     Key? key,
     required this.hintText,
     required this.icon,
+    required this.controller,
     this.isPassword = false,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      controller: controller,
       obscureText: isPassword,
       style: const TextStyle(color: Colors.black),
       decoration: InputDecoration(
@@ -155,8 +230,10 @@ class CustomTextField extends StatelessWidget {
 // Social Media Icon Button
 class SocialIconButton extends StatelessWidget {
   final IconData icon;
+  final VoidCallback onPressed;
 
-  const SocialIconButton({Key? key, required this.icon}) : super(key: key);
+  const SocialIconButton({Key? key, required this.icon, required this.onPressed})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -164,9 +241,7 @@ class SocialIconButton extends StatelessWidget {
       backgroundColor: Colors.white,
       child: IconButton(
         icon: Icon(icon, color: Colors.blue),
-        onPressed: () {
-          // Handle Social Login
-        },
+        onPressed: onPressed,
       ),
     );
   }

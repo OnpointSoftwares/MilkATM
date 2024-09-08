@@ -11,7 +11,10 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_zxing: ^1.5.2
+  firebase_core: ^2.27.0
   cupertino_icons: ^1.0.2
+  firebase_auth: ^4.17.8
+  google_sign_in: ^6.2.1
 
 dev_dependencies:
   flutter_test:
